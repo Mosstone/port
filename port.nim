@@ -208,13 +208,13 @@ proc main() =
 #<      Elixir
         of "exs":
 
-            proc elixirRun(): string =
+            proc route(): string =
                 result = execProcess(loc & "/elixir/bin/elixir " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
-            if quietitude:      discard elixirRun()
-            if not quietitude:  echo elixirRun()
+            if quietitude:      discard route()
+            if not quietitude:  echo route()
             if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
 
 
