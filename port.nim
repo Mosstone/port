@@ -64,7 +64,7 @@ proc help() =
         python. Miniforge is highly recommended for that reason and for it avoiding licensing
         issues.
 
-        Buerer, D. (2025). port (Version 1.0.0) [Computer software]. https://orcid.org/0009-0002-5084-0465
+        Buerer, D. (2025). port (Version 1.0.0) [Computer software]. https://doi.org/10.5281/zenodo.15566380
         Licensed under the Apache 2 license
     [0m"""
 
