@@ -10,19 +10,29 @@ import  std/strutils,
 
 proc help() =
     echo """[094m
-    Runs the bundled portable binary with the ajascent conda env folder
-
-    Detects the appropriate interpreter to use based on file extension
+    Language router
+    
+    Runs the bundled portable binary with the ajascent conda env folder, detected based on file extension
 
     Supported interpreters:
-        Python
-        Elixir
-        Rust (via rust-script)
+        elixir
+        python
+        rust    (via rust-script) (just name the environment 'rust')
+        julia
+        Perl
+        php
+        lua
+        deno
+        scheme  (via racket)
+        terraform
+        make
+        cmake
+        ninja
+        just
 
     
-    These languages are configured to execute using libraries included in the conda env. New languages
-    can be added by copying the case block and exporting the correct libraries to the conda env, which
-    tells the interpreter where the libraries can be found in addition (or instead of) the system path
+    These languages are configured to execute using libraries, included in the conda env. New
+    languages can be added using this utility or the included env-setup shell module directly
 
 
     Usage: 
@@ -32,7 +42,10 @@ proc help() =
             "~/project/.engine/port test.exs"   >>>     "~/project/.engine//elixir/bin/elixir test.exs"
 
 
-        To add an interpreter to the port, use anaconda or miniforge:
+        To add an interpreter to the port, ensure anaconda or miniforge is installed and run:
+            port --encode <interpreter>
+
+        Alternatively, follow these instructions:
             $ cd $(dirname $(realpath path/to/port)) # or just be in the right spot
             $ mamba create -n python && mamba activate python
             $ mamba install python micromamba
@@ -41,10 +54,15 @@ proc help() =
               python                 /home/user/conda/envs/python
             $ cd -r /home/usr/conda/envs/python .
         
-        Note that conda-forge has many interpreters, besides python. Miniforge is recommended
-        as it includes conda-forge and mamba by default unlike Anaconda. Including Micromamba
-        is recommended for each environments so end users can install packages and update the
-        interpreter if they don't have conda configured.
+        You can now run a file using port as a command router. Everything in the environments
+        are accessible. By default this is the interpreter, pipdeptree, and micromamba; which
+        can be used to update and install anything into that environment. To add other custom
+        environments to your port installation, add a block to the case section at the bottom
+        of this file. The location to be specified, unless moved, will be <env>/bin/<binary>
+        
+        Note that conda-forge has many interpreters, unlike Anaconda which primarily supports
+        python. Miniforge is highly recommended for that reason and for it avoiding licensing
+        issues.
 
         Buerer, D. (2025). port (Version 1.0.0) [Computer software]. https://orcid.org/0009-0002-5084-0465
         Licensed under the Apache 2 license
@@ -151,6 +169,15 @@ var arg = paramStr(1)
 
 
 
+if paramStr(1) == "--encode":
+    echo execProcess(getAppDir() & "/env-setup " & paramStr(2))
+    quit(0)
+
+
+
+
+
+
 
 #   Scans for the file extension
 if fileExists(arg):
@@ -161,11 +188,11 @@ if fileExists(arg):
 
     # unreachable code
     # else:
-    #     echo "[094m    NO FILE EXTENSION Dfgsrgrej[0m"
+    #     echo "[094m    >><<>><<><><><<><>>><><<><><><>>><><<\n\n    NO FILE EXTENSION Dfgsrgrej\n\n    ☢︎💥🍄🔥☢︎[0m"
     #     quit(1)
 
 else:
-    echo "[094m    NO SUCH FILE DJGFHSDGJGDSJ[0m"
+    echo "[094m    >><< File does not exist...[0m"
     quit(1)
 
 
@@ -184,24 +211,184 @@ proc main() =
             proc elixirRun(): string =
                 result = execProcess(loc & "/elixir/bin/elixir " & arg)
 
-            if verbosity == true:    stdout.write("\e[94m    Executing...\e[0m")
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
-            if quietitude == true:   discard elixirRun()
-            if quietitude == false:    echo elixirRun()
-            if verbosity == true:    stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+            if quietitude:      discard elixirRun()
+            if not quietitude:  echo elixirRun()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
 
 
 #<      Python
         of "py":
 
-            proc pythonRun(): string =
+            proc route(): string =
                 result = execProcess(loc & "/python/bin/python " & arg)
 
-            if verbosity == true:    stdout.write("\e[94m    Executing...\e[0m")
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
-            if quietitude == true:   discard pythonRun()
-            if quietitude == false:    echo pythonRun()
-            if verbosity == true:    stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+            if quietitude:      discard route()
+            if not quietitude:  echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      Rust
+        of "rs":
+
+            proc route(): string =
+                result = execProcess(loc & "/rust/bin/rust-script " & arg)
+
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:      echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      Julia
+        of "jl":
+
+            proc route(): string =
+                result = execProcess(loc & "/julia/bin/julia " & arg)
+
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:      echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      perl
+        of "pl":
+
+            proc route(): string =
+                result = execProcess(loc & "/perl/bin/perl " & arg)
+
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:      echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      php
+        of "php":
+
+            proc route(): string =
+                result = execProcess(loc & "/php/bin/php " & arg)
+
+            if verbosity:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:  echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      lua
+        of "lua":
+
+            proc route(): string =
+                result = execProcess(loc & "/lua/bin/lua " & arg)
+
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:  echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      deno
+        of "deno":
+
+            proc route(): string =
+                result = execProcess(loc & "/deno/bin/deno " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      scheme (racket)
+        of "racket":
+
+            proc route(): string =
+                result = execProcess(loc & "/racket/bin/racket " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      terraform
+        of "terraform":
+
+            proc route(): string =
+                result = execProcess(loc & "/terraform/bin/terraform " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      make
+        of "make":
+
+            proc route(): string =
+                result = execProcess(loc & "/make/bin/make " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      cmake
+        of "cmake":
+
+            proc route(): string =
+                result = execProcess(loc & "/cmake/bin/cmake " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      ninja
+        of "ninja":
+
+            proc route(): string =
+                result = execProcess(loc & "/ninja/bin/ninja " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      justfile
+        of "just":
+
+            proc route(): string =
+                result = execProcess(loc & "/just/bin/just " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+
+
 
 
         else:
