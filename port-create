@@ -47,7 +47,7 @@ here() {
 
 
 
-echo "\$1 is $1"
+
 
 
 #   Checks if the argument is a recognized language
@@ -143,6 +143,13 @@ case $1 in
         echo "terraform detected" > $verbosity
         lang="terraform"
         exec="terraform"
+    ;;
+
+
+    ansible)
+        echo "terraform detected" > $verbosity
+        lang="ansible"
+        exec="ansible-playbook"
     ;;
 
 
@@ -315,6 +322,10 @@ Instantiation() {
             payload+="terraform "
         ;;
 
+        ansible)
+            payload+="ansible "
+        ;;
+
         # ansible)
         #     payload+="ansible "
         # ;;
@@ -398,12 +409,12 @@ Disambiguation() {
 
 main() {
 
-    echo -en "\n[094m    Creating env..." > $quietitude
+    echo -en "\n[094m    Creating env...\n\n" > $quietitude
     Instantiation
     echo -en "\r[094m  ✓ Creating env...Done[0m" > $quietitude
 
 
-    echo -en "\n[094m    Cloning env...\n" > $quietitude
+    echo -en "\n[094m    Cloning env...\n\n" > $quietitude
     Reduplication
     echo -en "\r[094m  ✓ Cloning env...Done[0m" > $quietitude
 
@@ -412,7 +423,7 @@ main() {
     Disambiguation
     echo -en "\r[094m  ✓ Cleaning env...Done\n\n[0m" > $quietitude
 
-    which "$exec"
+    echo -e "[094m    Executable locataion:   $(here)/[095m.$lang/bin/$exec\n[0m"
 
 }; main
 

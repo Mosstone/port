@@ -17,18 +17,21 @@ proc help() =
     Supported interpreters:
         elixir
         python
-        rust    (via rust-script) (just name the environment 'rust')
+        rust    (via rust-script)
         julia
-        Perl
+        perl
+        ruby
         php
         lua
         deno
         scheme  (via racket)
         terraform
+        ansible (must be an .ansible.yml file and not an ambiguous .yml file)
         make
         cmake
         ninja
         just
+        lammps  (must be a .lmp file and not an ambiguous .in file)
 
     
     These languages are configured to execute using libraries, included in the conda env. New
@@ -162,6 +165,7 @@ grep -q \"虚\" /dev/shm/.imNotHere 2> /dev/null || cat <<-'EOF' > /dev/shm/.imN
 
 
 var language: string
+var shmagage: string
 # var arg: string
 var arg = paramStr(1)
 
@@ -181,15 +185,14 @@ if paramStr(1) == "--encode":
 
 #   Scans for the file extension
 if fileExists(arg):
-
     if paramCount() > 0:
+
         if verbosity == true:  brand()
         language = arg.split('.')[^1]
+        shmagage = arg.split('.')[^2]
 
-    # unreachable code
-    # else:
-    #     echo "[094m    >><<>><<><><><<><>>><><<><><><>>><><<\n\n    NO FILE EXTENSION Dfgsrgrej\n\n    ☢︎💥🍄🔥☢︎[0m"
-    #     quit(1)
+        # echo language
+        # echo shmagage
 
 else:
     echo "[094m    >><< File does not exist...[0m"
@@ -209,7 +212,7 @@ proc main() =
         of "exs":
 
             proc route(): string =
-                result = execProcess(loc & "/elixir/bin/elixir " & arg)
+                result = execProcess(loc & "/.elixir/bin/elixir " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -222,7 +225,7 @@ proc main() =
         of "py":
 
             proc route(): string =
-                result = execProcess(loc & "/python/bin/python " & arg)
+                result = execProcess(loc & "/.python/bin/python " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -235,7 +238,7 @@ proc main() =
         of "rs":
 
             proc route(): string =
-                result = execProcess(loc & "/rust/bin/rust-script " & arg)
+                result = execProcess(loc & "/.rust/bin/rust-script " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -248,7 +251,7 @@ proc main() =
         of "jl":
 
             proc route(): string =
-                result = execProcess(loc & "/julia/bin/julia " & arg)
+                result = execProcess(loc & "/.julia/bin/julia " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -261,7 +264,20 @@ proc main() =
         of "pl":
 
             proc route(): string =
-                result = execProcess(loc & "/perl/bin/perl " & arg)
+                result = execProcess(loc & "/.perl/bin/perl " & arg)
+
+            if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude:      discard route()
+            if not quietitude:      echo route()
+            if verbosity:       stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      Ruby
+        of "rb":
+
+            proc route(): string =
+                result = execProcess(loc & "/.ruby/bin/ruby " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -274,7 +290,7 @@ proc main() =
         of "php":
 
             proc route(): string =
-                result = execProcess(loc & "/php/bin/php " & arg)
+                result = execProcess(loc & "/.php/bin/php " & arg)
 
             if verbosity:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -287,7 +303,7 @@ proc main() =
         of "lua":
 
             proc route(): string =
-                result = execProcess(loc & "/lua/bin/lua " & arg)
+                result = execProcess(loc & "/.lua/bin/lua " & arg)
 
             if verbosity:       stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -300,7 +316,7 @@ proc main() =
         of "deno":
 
             proc route(): string =
-                result = execProcess(loc & "/deno/bin/deno " & arg)
+                result = execProcess(loc & "/.deno/bin/deno " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -313,7 +329,7 @@ proc main() =
         of "racket":
 
             proc route(): string =
-                result = execProcess(loc & "/racket/bin/racket " & arg)
+                result = execProcess(loc & "/.racket/bin/racket " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -323,10 +339,10 @@ proc main() =
 
 
 #<      terraform
-        of "terraform":
+        of "tf":
 
             proc route(): string =
-                result = execProcess(loc & "/terraform/bin/terraform " & arg)
+                result = execProcess(loc & "/.terraform/bin/terraform " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -335,11 +351,26 @@ proc main() =
             if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
 
 
+#<      ansible
+        of "yml":   #   ansible.yml is required to specify the intended interpreter
+                    #   this really should be common for general formats regardless
+
+            if shmagage == "ansible":
+                proc route(): string =
+                    result = execProcess(loc & "/.ansible/bin/ansible-playbook " & arg)
+
+                if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+                flushFile(stdout)
+                if quietitude == true:  discard route()
+                if quietitude == false: echo route()
+                if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
 #<      make
         of "make":
 
             proc route(): string =
-                result = execProcess(loc & "/make/bin/make " & arg)
+                result = execProcess(loc & "/.make/bin/make " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -352,7 +383,7 @@ proc main() =
         of "cmake":
 
             proc route(): string =
-                result = execProcess(loc & "/cmake/bin/cmake " & arg)
+                result = execProcess(loc & "/.cmake/bin/cmake " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -365,7 +396,7 @@ proc main() =
         of "ninja":
 
             proc route(): string =
-                result = execProcess(loc & "/ninja/bin/ninja " & arg)
+                result = execProcess(loc & "/.ninja/bin/ninja " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
@@ -378,7 +409,20 @@ proc main() =
         of "just":
 
             proc route(): string =
-                result = execProcess(loc & "/just/bin/just " & arg)
+                result = execProcess(loc & "/.just/bin/just " & arg)
+
+            if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
+            flushFile(stdout)
+            if quietitude == true:  discard route()
+            if quietitude == false: echo route()
+            if verbosity == true:   stdout.write("\r\e[94m  ✓ Executing...done\e[0m\n")
+
+
+#<      lammps
+        of "lmp":   #   the .in extension is ambiguous and could result in false positives
+
+            proc route(): string =
+                result = execProcess(loc & "/.lammps/bin/lmp " & arg)
 
             if verbosity == true:   stdout.write("\e[94m    Executing...\e[0m")
             flushFile(stdout)
