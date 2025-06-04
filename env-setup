@@ -47,7 +47,7 @@ here() {
 
 
 
-
+echo "\$1 is $1"
 
 
 #   Checks if the argument is a recognized language
@@ -56,28 +56,33 @@ case $1 in
     elixir)
         echo "elixir detected" > $verbosity
         lang="elixir"
+        exec="elixir"
     ;;
 
 
     python)
         echo "python detected" > $verbosity
         lang="python"
+        exec="python"
     ;;
 
 
     rust)
         echo "rust detected" > $verbosity
         lang="rust"
+        exec="rust-script"
     ;;
     rust-script)
         echo "rust detected" > $verbosity
         lang="rust"
+        exec="rust-script"
     ;;
 
 
     julia)
         echo "julia detected" > $verbosity
         lang="julia"
+        exec="julia"
     ;;
 
     # matlab|octave)
@@ -89,6 +94,7 @@ case $1 in
     perl)
         echo "perl detected" > $verbosity
         lang="perl"
+        exec="perl"
     ;;
 
 
@@ -98,39 +104,45 @@ case $1 in
     # ;;
 
 
-    # ruby)
-    #     echo "ruby detected" > $verbosity
-    #     lang="ruby"
-    # ;;
+    ruby)
+        echo "ruby detected" > $verbosity
+        lang="ruby"
+        exec="ruby"
+    ;;
 
 
     php)
         echo "php detected" > $verbosity
         lang="php"
+        exec="php"
     ;;
 
 
     lua)
         echo "lua detected" > $verbosity
         lang="lua"
+        exec="lua"
     ;;
 
 
     deno)
         echo "deno detected" > $verbosity
         lang="deno"
+        exec="deno"
     ;;
 
 
     scheme|racket)
         echo "scheme detected" > $verbosity
         lang="racket"
+        exec="racket"
     ;;
 
 
     terraform)
         echo "terraform detected" > $verbosity
         lang="terraform"
+        exec="terraform"
     ;;
 
 
@@ -143,37 +155,50 @@ case $1 in
     make)
         echo "make detected" > $verbosity
         lang="make"
+        exec="make"
     ;;
 
 
     cmake)
         echo "cmake detected" > $verbosity
         lang="cmake"
+        exec="cmake"
     ;;
 
 
     ninja)
         echo "ninja detected" > $verbosity
         lang="ninja"
+        exec="ninja"
     ;;
 
 
-    # meson)
-    #     echo "meson detected" > $verbosity
-    #     lang="meson"
-    # ;;
+    meson)
+        echo "meson detected" > $verbosity
+        lang="meson"
+        exec="meson"
+    ;;
 
 
 
     just)
         echo "just detected" > $verbosity
         lang="just"
+        exec="just"
+    ;;
+
+
+    lammps)
+        echo "just detected" > $verbosity
+        lang="lammps"
+        exec="lmp"
     ;;
 
 
     *)
-        echo -e "\n[094m    >><< Unrecognized language...\n[0m"
-        exit 1
+        echo "Package not recognized but user specified $1 ¯\_(ツ)_/¯ blindly assuming .$1/bin/$1 will be executable..." > $verbosity
+        lang="$1"
+        exec="$1"
     ;;
 
 esac
@@ -193,25 +218,61 @@ fi
 
 
 echo $snake > $verbosity
+orders() { :; } # so that it doesn't error later if there are no orders
 
 
 Instantiation() {
     :   #   Creates a single use conda env with the requested payload
 
     declare payload
+    declare commands=":"
     case $lang in
 
         elixir)
+        #   Packages to be installed with mamba
             payload+="elixir "
         ;;
 
         python)
             payload+="python=3.11 "
-            payload+="pip "
         ;;
 
         rust)
+            payload+="rust "
             payload+="rust-script "
+            payload+="serde "
+            payload+="tauri "
+            
+        #   Code to be executed using the installed env after creation but before packing as tarball
+            orders() {
+                
+                list=(
+                    rustler
+                    tokio
+                    reqwest
+                    tower
+                    hyper
+                    warp
+                )
+
+                # for crate in ${list[@]}; do
+                #     crate fetch $crate
+                # done
+
+                mkdir -p /tmp/
+                mkdir -p "$(pwd)/.rust/.cache/cargo"
+                mkdir -p "$(pwd)/.rust/.cache/rustup"
+                realpath "$(pwd)/.rust/.cache/rustup"
+                ls "$(pwd)/.rust/.cache/"
+
+                cat <<-"EOF" > cargoExport.sh
+                    #!/usr/bin/env sh
+                    export CARGO_HOME="$(pwd)/.rust/.cache/cargo"
+                    export RUSTUP_HOME="$(pwd)/.rust/.cache/rustup"
+				EOF
+
+            }
+
         ;;
 
         julia)
@@ -278,16 +339,27 @@ Instantiation() {
             payload+="just "
         ;;
 
+        lammps)
+            payload+="lammps "
+            payload+="cuda-cudart "
+            payload+="cuda-version=12 "
+        ;;
+
+        *)
+            payload+="$lang "
+        ;;
+
     esac
 
     eval "$($snake shell hook --shell bash)"
-    $snake create -n $nonce -y --copy $payload &> /dev/null
-    $snake activate $nonce
-    $snake install -y micromamba pipdeptree $payload &> $verbosity
+    $snake create -p /dev/shm/$nonce.mamba -y --copy $payload &> /dev/null
+    $snake activate /dev/shm/$nonce.mamba
+    $snake install -vy micromamba pipdeptree conda-pack $payload 2> $verbosity
+
+    orders
 
 
     if [[ $verbose == '/dev/stdout' ]]; then
-    echo "verbosity detected"
         echo -e "\n[094m    Environment created:"
         $snake env list | grep $nonce > $verbose
     fi
@@ -296,14 +368,20 @@ Instantiation() {
 
 Reduplication() {
     :   #   Copies the conda env to the port directory and changes the name
-    cp -r $HOME/conda/envs/$nonce .
-    mv ./$nonce ./$lang
+    mkdir "./.$lang" &> /dev/null
+    conda-pack -j -1 -o "/dev/shm/$nonce.tar.gz" --force 2> /dev/null
+
+    ionice -c3 tar -xf /dev/shm/$nonce.tar.gz -C "./.$lang" \
+        --no-same-owner --no-same-permissions --overwrite-dir # --verbose
+
+    rm /dev/shm/$nonce.tar.gz
 }
 
 
 Disambiguation() {
     :   #   Removes the single use conda env, leaving only the port version
-    $snake env remove -n $nonce -y > /dev/null
+    $snake env remove -p /dev/shm/$nonce.mamba -y > /dev/null
+    rm /dev/shm/$nonce.* &> /dev/null
 }
 
 
@@ -322,17 +400,19 @@ main() {
 
     echo -en "\n[094m    Creating env..." > $quietitude
     Instantiation
-    echo -en "\r[094m  ✓ Creating env...Done\n[0m" > $quietitude
+    echo -en "\r[094m  ✓ Creating env...Done[0m" > $quietitude
 
 
-    echo -en "\n[094m    Cloning env..." > $quietitude
+    echo -en "\n[094m    Cloning env...\n" > $quietitude
     Reduplication
-    echo -en "\r[094m  ✓ Cloning env...Done\n[0m" > $quietitude
+    echo -en "\r[094m  ✓ Cloning env...Done[0m" > $quietitude
 
 
     echo -en "\n[094m    Cleaning env..." > $quietitude
     Disambiguation
-    echo -en "\r[094m  ✓ Cleaning env...Done\n[0m" > $quietitude
+    echo -en "\r[094m  ✓ Cleaning env...Done\n\n[0m" > $quietitude
+
+    which "$exec"
 
 }; main
 
