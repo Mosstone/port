@@ -1,9 +1,0 @@
-prefix=/home/shade/conda/envs/8e20277b4273deac567471aef0cd37a3
-exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include 
-
-Name: OpenSSL
-Description: Secure Sockets Layer and cryptography libraries and tools
-Version: 3.5.0
-Requires: libssl libcrypto

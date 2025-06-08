@@ -1,5 +1,0 @@
-#!/home/shade/conda/envs/8e20277b4273deac567471aef0cd37a3/bin/python3.11
-
-from idlelib.pyshell import main
-if __name__ == '__main__':
-    main()

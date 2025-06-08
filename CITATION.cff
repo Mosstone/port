@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+license: Apache-2.0
+message: "If you use this software, please cite it as below."
+authors:
+- given-names: "Daniel" 
+  family-names: "Buerer"
+  orcid: "https://orcid.org/0009-0002-5084-0465"
+title: "port"
+version: 1.0.0
+doi: 10.5281/zenodo.15566380
+date-released: 2025-05-31
+url: "https://github.com/Mosstone/port"
+abstract: >
+  Portable language router. Allows users to pull various languages from
+  conda-forge, move the environment to the root directory, and then use
+  the executable to invoke those environments to read code. The correct
+  interpreter is used based on extension
+
+  Extensible by developers to be able to pull any executable from forge

@@ -1,0 +1,19 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "author": [
+    {
+      "@id": "https://orcid.org/0009-0002-5084-0465",
+      "@type": "Person",
+      "familyName": "Buerer",
+      "givenName": "Daniel"
+    }
+  ],
+  "datePublished": "2025-05-31",
+  "description": "Portable language router. Allows users to pull various languages from conda-forge, move the environment to the root directory, and then use the executable to invoke those environments to read code. The correct interpreter is used based on extension\nExtensible by developers to be able to pull any executable from forge\n",
+  "identifier": "https://doi.org/10.5281/zenodo.15566380",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "name": "port",
+  "url": "https://github.com/Mosstone/port",
+  "version": "1.0.0"
+}
