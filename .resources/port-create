@@ -1,0 +1,435 @@
+#!/usr/bin/env bash
+
+
+
+
+
+
+nonce=$(openssl rand -hex 16)
+
+verbosity="/dev/null"
+quietitude="/dev/stdout"
+for arg in $@; do
+
+    if [[ $arg == '--verbose' ]]; then
+        verbosity="/dev/stdout"
+    fi
+
+    if [[ $arg == '--quiet' ]]; then
+        quietitude="/dev/null"
+    fi
+
+done
+
+# echo $verbosity
+# echo $quietitude
+
+here() {
+	local here="$(dirname "$(realpath ${BASH_SOURCE[0]})")"
+	
+	local i="$1"
+	while [[ "$i" -gt 0 ]]; do
+		if [[ "$i" -gt 100 ]]; then
+			i=100
+		fi
+		((--i))
+		here="$(dirname "$here")"
+	done
+	echo "$here" > /dev/stdout
+}
+
+
+
+
+
+
+##############################################################################################################################
+
+
+
+
+
+
+#   Checks if the argument is a recognized language
+case $1 in
+
+    elixir)
+        echo "elixir detected" > $verbosity
+        lang="elixir"
+        exec="elixir"
+    ;;
+
+
+    python)
+        echo "python detected" > $verbosity
+        lang="python"
+        exec="python"
+    ;;
+
+
+    rust)
+        echo "rust detected" > $verbosity
+        lang="rust"
+        exec="rust-script"
+    ;;
+    rust-script)
+        echo "rust detected" > $verbosity
+        lang="rust"
+        exec="rust-script"
+    ;;
+
+
+    julia)
+        echo "julia detected" > $verbosity
+        lang="julia"
+        exec="julia"
+    ;;
+
+    # matlab|octave)
+    #     echo "octave detected" > $verbosity
+    #     lang="octave"
+    # ;;
+
+
+    perl)
+        echo "perl detected" > $verbosity
+        lang="perl"
+        exec="perl"
+    ;;
+
+
+    # R)
+    #     echo "R detected" > $verbosity
+    #     lang="R"
+    # ;;
+
+
+    ruby)
+        echo "ruby detected" > $verbosity
+        lang="ruby"
+        exec="ruby"
+    ;;
+
+
+    php)
+        echo "php detected" > $verbosity
+        lang="php"
+        exec="php"
+    ;;
+
+
+    lua)
+        echo "lua detected" > $verbosity
+        lang="lua"
+        exec="lua"
+    ;;
+
+
+    deno)
+        echo "deno detected" > $verbosity
+        lang="deno"
+        exec="deno"
+    ;;
+
+
+    scheme|racket)
+        echo "scheme detected" > $verbosity
+        lang="racket"
+        exec="racket"
+    ;;
+
+
+    terraform)
+        echo "terraform detected" > $verbosity
+        lang="terraform"
+        exec="terraform"
+    ;;
+
+
+    ansible)
+        echo "terraform detected" > $verbosity
+        lang="ansible"
+        exec="ansible-playbook"
+    ;;
+
+
+    # ansible)
+    #     echo "ansible detected" > $verbosity
+    #     lang="ansible"
+    # ;;
+
+
+    make)
+        echo "make detected" > $verbosity
+        lang="make"
+        exec="make"
+    ;;
+
+
+    cmake)
+        echo "cmake detected" > $verbosity
+        lang="cmake"
+        exec="cmake"
+    ;;
+
+
+    ninja)
+        echo "ninja detected" > $verbosity
+        lang="ninja"
+        exec="ninja"
+    ;;
+
+
+    meson)
+        echo "meson detected" > $verbosity
+        lang="meson"
+        exec="meson"
+    ;;
+
+
+
+    just)
+        echo "just detected" > $verbosity
+        lang="just"
+        exec="just"
+    ;;
+
+
+    lammps)
+        echo "just detected" > $verbosity
+        lang="lammps"
+        exec="lmp"
+    ;;
+
+
+    *)
+        echo "Package not recognized but user specified $1 ¯\_(ツ)_/¯ blindly assuming .$1/bin/$1 will be executable..." > $verbosity
+        lang="$1"
+        exec="$1"
+    ;;
+
+esac
+
+
+declare snake
+if mamba --version > /dev/null; then 
+    snake="mamba"
+else
+    if conda --version > /dev/null; then
+        snake="conda"
+    else
+        echo -e "\n[094m    >><< Conda envs are not supported on the system...\n[0m"
+        exit 1
+    fi
+fi
+
+
+echo $snake > $verbosity
+orders() { :; } # so that it doesn't error later if there are no orders
+
+
+Instantiation() {
+    :   #   Creates a single use conda env with the requested payload
+
+    declare payload
+    declare commands=":"
+    case $lang in
+
+        elixir)
+        #   Packages to be installed with mamba
+            payload+="elixir "
+        ;;
+
+        python)
+            payload+="python=3.11 "
+        ;;
+
+        rust)
+            payload+="rust "
+            payload+="rust-script "
+            payload+="serde "
+            payload+="tauri "
+            
+        #   Code to be executed using the installed env after creation but before packing as tarball
+            orders() {
+                
+                list=(
+                    rustler
+                    tokio
+                    reqwest
+                    tower
+                    hyper
+                    warp
+                )
+
+                # for crate in ${list[@]}; do
+                #     crate fetch $crate
+                # done
+
+                mkdir -p /tmp/
+                mkdir -p "$(pwd)/.rust/.cache/cargo"
+                mkdir -p "$(pwd)/.rust/.cache/rustup"
+                realpath "$(pwd)/.rust/.cache/rustup"
+                ls "$(pwd)/.rust/.cache/"
+
+                cat <<-"EOF" > cargoExport.sh
+                    #!/usr/bin/env sh
+                    export CARGO_HOME="$(pwd)/.rust/.cache/cargo"
+                    export RUSTUP_HOME="$(pwd)/.rust/.cache/rustup"
+				EOF
+
+            }
+
+        ;;
+
+        julia)
+            payload+="julia "
+        ;;
+
+        # octave)
+        #     payload+="octave "
+        # ;;
+
+        perl)
+            payload+="perl "
+        ;;
+
+        # R)
+        #     payload+="R "
+        # ;;
+
+        # ruby)
+        #     payload+="ruby "
+        # ;;
+
+        php)
+            payload+="php "
+        ;;
+
+        lua)
+            payload+="lua "
+        ;;
+
+        deno)
+            payload+="deno "
+        ;;
+
+        racket)
+            payload+="racket "
+        ;;
+
+        terraform)
+            payload+="terraform "
+        ;;
+
+        ansible)
+            payload+="ansible "
+        ;;
+
+        # ansible)
+        #     payload+="ansible "
+        # ;;
+
+        make)
+            payload+="make "
+        ;;
+
+        cmake)
+            payload+="cmake "
+        ;;
+
+        ninja)
+            payload+="ninja "
+        ;;
+
+        # meson)
+        #     payload+="meson "
+        # ;;
+
+        just)
+            payload+="just "
+        ;;
+
+        lammps)
+            payload+="lammps "
+            payload+="cuda-cudart "
+            payload+="cuda-version=12 "
+        ;;
+
+        *)
+            payload+="$lang "
+        ;;
+
+    esac
+
+    eval "$($snake shell hook --shell bash)"
+    $snake create -p /dev/shm/$nonce.mamba -y --copy $payload &> /dev/null
+    $snake activate /dev/shm/$nonce.mamba
+    $snake install -vy micromamba pipdeptree conda-pack $payload 2> $verbosity
+
+    orders
+
+
+    if [[ $verbose == '/dev/stdout' ]]; then
+        echo -e "\n[094m    Environment created:"
+        $snake env list | grep $nonce > $verbose
+    fi
+}
+
+
+Reduplication() {
+    :   #   Copies the conda env to the port directory and changes the name
+    mkdir "./.$lang" &> /dev/null
+    conda-pack -j -1 -o "/dev/shm/$nonce.tar.gz" --force 2> /dev/null
+
+    ionice -c3 tar -xf /dev/shm/$nonce.tar.gz -C "./.$lang" \
+        --no-same-owner --no-same-permissions --overwrite-dir # --verbose
+
+    rm /dev/shm/$nonce.tar.gz
+}
+
+
+Disambiguation() {
+    :   #   Removes the single use conda env, leaving only the port version
+    $snake env remove -p /dev/shm/$nonce.mamba -y > /dev/null
+    rm /dev/shm/$nonce.* &> /dev/null
+}
+
+
+
+
+
+
+##############################################################################################################################
+
+
+
+
+
+
+main() {
+
+    echo -en "\n[094m    Creating env...\n\n" > $quietitude
+    Instantiation
+    echo -en "\r[094m  ✓ Creating env...Done[0m" > $quietitude
+
+
+    echo -en "\n[094m    Cloning env...\n\n" > $quietitude
+    Reduplication
+    echo -en "\r[094m  ✓ Cloning env...Done[0m" > $quietitude
+
+
+    echo -en "\n[094m    Cleaning env..." > $quietitude
+    Disambiguation
+    echo -en "\r[094m  ✓ Cleaning env...Done\n\n[0m" > $quietitude
+
+    echo -e "[094m    Executable locataion:   $(here 1)/[095m.$lang/bin/$exec\n[0m"
+
+}; main
+
+
+#   used for testing if the above worked or not
+# synth() {
+#     rm -fr ./$1 2> /dev/null
+#     ./env-setup $1; $1/bin/$1 --version
+# }
